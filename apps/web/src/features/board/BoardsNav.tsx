@@ -21,6 +21,9 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
+  // Инлайн-ввод папки (window.prompt не работает в Tauri-обёртке).
+  const [folderingId, setFolderingId] = useState<string | null>(null);
+  const [folderDraft, setFolderDraft] = useState('');
   // Свёрнутые папки помним локально — это личное состояние навигации.
   const [collapsed, setCollapsed] = useState<string[]>(() => {
     try {
@@ -66,14 +69,51 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
     reorder(String(active.id), position);
   }
 
-  function moveToFolder(boardId: string, current: string | null) {
+  function startFoldering(board: BoardSummary) {
     setMenuId(null);
-    const name = window.prompt('Папка для доски (пусто — без папки):', current ?? '');
-    if (name === null) return;
-    setFolder(boardId, name.trim() || null);
+    setFolderDraft(board.folder ?? '');
+    setFolderingId(board.id);
+  }
+
+  function submitFolder(boardId: string) {
+    setFolder(boardId, folderDraft.trim() || null);
+    setFolderingId(null);
   }
 
   function renderRow(board: BoardSummary, indent: boolean) {
+    if (folderingId === board.id) {
+      return (
+        <div key={board.id} style={{ marginLeft: indent ? 16 : 0, padding: '1px 0' }}>
+          <input
+            autoFocus
+            list="plank-folder-names"
+            value={folderDraft}
+            onChange={(e) => setFolderDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submitFolder(board.id);
+              }
+              if (e.key === 'Escape') setFolderingId(null);
+            }}
+            onBlur={() => setFolderingId(null)}
+            placeholder="Папка, Enter — сохранить"
+            style={{
+              width: '100%',
+              height: 34,
+              border: '1px solid var(--color-accent)',
+              borderRadius: 8,
+              padding: '0 10px',
+              font: 'var(--text-ui)',
+              color: 'var(--color-text)',
+              background: 'var(--color-surface)',
+              outline: 'none',
+              boxShadow: 'var(--focus-ring)',
+            }}
+          />
+        </div>
+      );
+    }
     return (
       <BoardRow
         key={board.id}
@@ -96,7 +136,7 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
           setEditingId(null);
         }}
         onCancelRename={() => setEditingId(null)}
-        onMoveToFolder={() => moveToFolder(board.id, board.folder)}
+        onMoveToFolder={() => startFoldering(board)}
         onDelete={() => {
           setMenuId(null);
           if (window.confirm(`Удалить доску «${board.title}»? Все её списки и карточки удалятся.`)) {
@@ -128,6 +168,12 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
   return (
     <div>
       <div style={overline}>Доски</div>
+
+      <datalist id="plank-folder-names">
+        {folders.map((f) => (
+          <option key={f} value={f} />
+        ))}
+      </datalist>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={ordered.map((b) => b.id)} strategy={verticalListSortingStrategy}>
