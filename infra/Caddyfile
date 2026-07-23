@@ -1,0 +1,20 @@
+# Caddy перед Plank: TLS-терминация + reverse proxy.
+# HTTPS на 9443 (443/8443 заняты Shadowsocks — их не трогаем).
+# Сертификат Let's Encrypt берётся по HTTP-01 challenge на порту 80.
+{
+	http_port 80
+	https_port 9443
+	email admin@atank.ru
+	# Свой редирект (авто-редирект ушёл бы на :443, который занят), не авто.
+	auto_https disable_redirects
+}
+
+# http → https на нужный порт 9443.
+http://plank.atank.ru {
+	redir https://plank.atank.ru:9443{uri}
+}
+
+# HTTPS-сайт (слушает на https_port = 9443).
+plank.atank.ru {
+	reverse_proxy app:3000
+}

@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-plank}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plank}
+      POSTGRES_DB: ${POSTGRES_DB:-plank}
+    # Тюнинг под малую RAM (VPS ~1 GB)
+    command: postgres -c shared_buffers=128MB -c max_connections=30
+    # Для локальной разработки порт наружу удобен. Берём 5433, чтобы не
+    # конфликтовать с нативным Postgres на 5432, и слушаем только localhost.
+    # На проде эту секцию убрать — база доступна только во внутренней docker-сети.
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'

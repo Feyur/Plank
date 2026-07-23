@@ -1,0 +1,172 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+/* Нативные контролы следуют теме (скроллбары, дефолтные фоны инпутов). */
+:root {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+button,
+textarea {
+  font-family: inherit;
+}
+
+/* Карточка доски: плавный ховер (приподнимается, тень глубже). */
+.plank-card {
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s,
+    transform 0.12s;
+}
+.plank-card:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+/* Перетаскиваемая карточка превращается в пунктирный «призрак» на своём месте
+   (высота сохраняется — контент прячем, не убираем). Рамку/фон задаёт CardItem. */
+.plank-card.dragging > * {
+  visibility: hidden;
+}
+
+/* Иконка кнопки «Обновить» крутится один оборот при нажатии. */
+@keyframes plank-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: plank-spin 0.7s ease;
+  transform-origin: center;
+}
+
+/* Логотип: при наведении «планки» подрастают как эквалайзер, а плашка чуть
+   наклоняется — живая фишка, отличающая Plank от статичных лого. */
+.brand {
+  cursor: default;
+  user-select: none;
+}
+.brand-mark {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.brand:hover .brand-mark {
+  transform: rotate(-6deg) scale(1.08);
+}
+.brand-bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.brand:hover .brand-bar-1 {
+  transform: scaleY(1.18);
+}
+.brand:hover .brand-bar-2 {
+  transform: scaleY(1.52);
+}
+.brand-word {
+  transition: letter-spacing 0.32s ease;
+}
+.brand:hover .brand-word {
+  letter-spacing: 0.005em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark,
+  .brand-bar,
+  .brand-word {
+    transition: none;
+  }
+  .brand:hover .brand-mark,
+  .brand:hover .brand-bar-1,
+  .brand:hover .brand-bar-2 {
+    transform: none;
+  }
+}
+
+/* Кружок «выполнено» на карточке: пустой намекает зелёным при наведении на карточку. */
+.card-check {
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+.plank-card:hover .card-check {
+  border-color: var(--color-success);
+}
+
+/* Ховер пунктов выпадающих меню и дней календаря — мгновенный отклик.
+   База transparent обязательна: иначе <button> берёт серый фон браузера. */
+.menu-item,
+.cal-day {
+  background: transparent;
+  transition: background 0.12s;
+}
+.menu-item:hover,
+.cal-day:hover {
+  background: var(--color-border-soft);
+}
+
+/* Тонкие кастомные скроллбары (класс .scrl), как в дизайне. */
+.scrl::-webkit-scrollbar {
+  height: 11px;
+  width: 11px;
+}
+.scrl::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.scrl::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+.scrl::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Мобильная вёрстка доски (телефон). Тулбар переносится, поиск на всю ширину,
+   колонки почти во весь экран с прокруткой по одной, модалки без лишних полей. */
+@media (max-width: 768px) {
+  .board-toolbar {
+    flex-wrap: wrap;
+  }
+  .board-search {
+    flex: 1 1 100%;
+    order: 3;
+  }
+  .board-search input {
+    width: 100% !important;
+  }
+  .board-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 12px;
+  }
+  .board-column {
+    flex-basis: 84vw !important;
+    width: 84vw !important;
+    max-width: 340px;
+    scroll-snap-align: start;
+  }
+  .modal-overlay {
+    padding: 16px 8px !important;
+    align-items: flex-start !important;
+  }
+}

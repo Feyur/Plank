@@ -1,0 +1,197 @@
+/*
+ * Plank — дизайн-токены (цвета, типографика, отступы, тени; светлая и тёмная темы).
+ * Источник правды по внешнему виду. Код использует эти переменные, а не «магические» значения.
+ * Обновление дизайна: сначала правим токены здесь, потом компоненты.
+ */
+:root {
+  /* Поверхности и фон */
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-border: #e8eaee;
+  --color-border-soft: #ebedf0;
+  --color-column-bg: #ebedf1;
+  --color-column-border: #e3e6eb;
+
+  /* Текст */
+  --color-text: #1c2024;
+  --color-text-secondary: #5b626b;
+  --color-text-secondary-strong: #3a4049;
+  --color-text-muted: #8b929c;
+  --color-text-muted-soft: #9aa0aa;
+
+  /* Акцент (по умолчанию — индиго; переключается твиком accent) */
+  --color-accent: #5b5bd6;
+  --color-accent-gradient: linear-gradient(140deg, #5b5bd6, #7b6cf0);
+  --color-accent-indigo: #5b5bd6;
+  --color-accent-emerald: #199a6e;
+  --color-accent-graphite: #3a3f47;
+  --color-accent-cobalt: #2f6bd6;
+
+  /* Статусы */
+  --color-danger: #d6395f;
+  --color-danger-bg: #fdebef;
+  --color-success: #1f9254;
+  --color-success-bg: #e6f5ec;
+
+  /* Метки: фон / текст */
+  --label-design-bg: #f0ebfd;      --label-design-fg: #6b4bd6;
+  --label-dev-bg: #e7eefc;         --label-dev-fg: #2f6bd6;
+  --label-urgent-bg: #fdebef;      --label-urgent-fg: #d6395f;
+  --label-research-bg: #e6f5ec;    --label-research-fg: #1f9254;
+  --label-marketing-bg: #fbf0df;   --label-marketing-fg: #a86c18;
+
+  /* Аватары */
+  --avatar-1: #6b8fd6;  /* АК/ВА */
+  --avatar-2: #59b39a;  /* МЛ */
+  --avatar-3: #c98a5a;  /* ДС */
+  --avatar-4: #9b7bd6;  /* ИП */
+  --avatar-5: #d67b9b;  /* ЕВ */
+  --avatar-6: #5aabb3;  /* ТР */
+
+  /* Типографика */
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --text-screen-title: 800 20px/1.2 var(--font-sans);   /* letter-spacing: -0.015em */
+  --text-board-title: 800 18px/1.2 var(--font-sans);
+  --text-section-title: 800 15px/1.3 var(--font-sans);
+  --text-card-title: 600 13.5px/1.4 var(--font-sans);
+  --text-ui: 600 13.5px/1.4 var(--font-sans);
+  --text-secondary: 500 12.5px/1.4 var(--font-sans);
+  --text-overline: 700 11px/1 var(--font-sans);         /* uppercase; letter-spacing: .06em */
+
+  /* Радиусы */
+  --radius-card: 11px;
+  --radius-panel: 14px;
+  --radius-modal: 18px;
+  --radius-button: 9px;
+  --radius-chip: 7px;
+  --radius-pill: 99px;
+
+  /* Высоты контролов */
+  --control-button: 36px;   /* диапазон 32–40 */
+  --control-input: 38px;    /* диапазон 36–40 */
+  --control-menu-item: 34px;
+
+  /* Отступы */
+  --space-screen: 24px;     /* контент экрана 22–28 */
+  --space-card: 12px;       /* внутри карточки 11–13 */
+  --gap-cards: 9px;
+  --gap-columns: 16px;
+
+  /* Тени */
+  --shadow-card: 0 1px 2px rgba(24, 28, 40, 0.05);
+  --shadow-card-hover: 0 4px 14px rgba(24, 28, 40, 0.1);
+  --shadow-drag: 0 16px 38px rgba(20, 25, 40, 0.26);
+  --shadow-dropdown: 0 14px 40px rgba(16, 20, 30, 0.16);
+  --shadow-modal: 0 24px 70px rgba(16, 20, 30, 0.32);
+  --shadow-accent-button: 0 2px 8px rgba(91, 91, 214, 0.28);
+
+  /* Паттерны */
+  --overlay-modal: rgba(20, 24, 33, 0.42);          /* + backdrop-filter: blur(3px) */
+  --focus-ring: 0 0 0 3px rgba(91, 91, 214, 0.12);  /* + border: var(--color-accent) */
+  --segments-bg: #eceef1;
+  --drag-placeholder: #c7ccd4;
+  --drag-ghost-bg: rgba(255, 255, 255, 0.4);
+  --drag-threshold: 5px;
+
+  /* Нейтральный чип метаданных карточки (срок, чеклист) */
+  --color-meta-bg: #f0f1f4;
+  --color-meta-fg: #6a717b;
+
+  /* Инпуты и ховеры */
+  --color-input-bg: #f7f8fa;
+  --color-input-border: #e4e7ec;
+  --color-border-hover: #d9dde3;
+  --scrollbar-thumb: #d3d7de;
+  --scrollbar-thumb-hover: #bcc2cc;
+  --add-list-bg: rgba(255, 255, 255, 0.55);
+
+  /* Палитра пользовательских меток (пастельный фон + насыщенный текст) */
+  --chip-purple-bg: #f0ebfd;  --chip-purple-fg: #6b4bd6;
+  --chip-blue-bg: #e7eefc;    --chip-blue-fg: #2f6bd6;
+  --chip-red-bg: #fdebef;     --chip-red-fg: #d6395f;
+  --chip-green-bg: #e6f5ec;   --chip-green-fg: #1f9254;
+  --chip-amber-bg: #fbf0df;   --chip-amber-fg: #a86c18;
+  --chip-teal-bg: #e2f0f2;    --chip-teal-fg: #2a7d86;
+  --chip-gray-bg: #eef0f3;    --chip-gray-fg: #5b626b;
+
+  /* Тоны колонок (переключаются в меню списка) */
+  --tint-grey-bg: #ebedf1;
+  --tint-grey-bd: #e3e6eb;
+  --tint-indigo-bg: #e9e9f9;
+  --tint-indigo-bd: #dedef2;
+  --tint-green-bg: #e3f1e9;
+  --tint-green-bd: #d6e8dd;
+  --tint-amber-bg: #f7eedb;
+  --tint-amber-bd: #eee2c8;
+  --tint-rose-bg: #f9e7ed;
+  --tint-rose-bd: #f0d9e1;
+  --tint-teal-bg: #e2f0f2;
+  --tint-teal-bd: #d3e6e9;
+}
+
+/*
+ * ТЁМНАЯ ТЕМА. Внимание: в стайл-гайде тёмные значения НЕ заданы — палитра ниже
+ * ВЫВЕДЕНА из светлой «в духе системы» (правило 65: сделано и явно помечено).
+ * Когда дизайн определит официальные тёмные токены — заменить значения здесь.
+ */
+:root[data-theme='dark'] {
+  /* Поверхности и фон */
+  --color-bg: #15171c;
+  --color-surface: #1e2127;
+  --color-border: #2b2f37;
+  --color-border-soft: #272b32;
+  --color-column-bg: #1a1d22;
+  --color-column-border: #262a31;
+
+  /* Текст */
+  --color-text: #e6e9ee;
+  --color-text-secondary: #9aa3b0;
+  --color-text-secondary-strong: #c2c9d4;
+  --color-text-muted: #7e8794;
+  --color-text-muted-soft: #666e7a;
+
+  /* Акцент чуть светлее — контраст на тёмном */
+  --color-accent: #7373e8;
+  --color-accent-gradient: linear-gradient(140deg, #6a6ae2, #8b7cf4);
+
+  /* Статусы */
+  --color-danger: #ef7d99;
+  --color-danger-bg: #3a2129;
+  --color-success: #5fc491;
+  --color-success-bg: #1d2f26;
+
+  /* Чипы метаданных и инпуты */
+  --color-meta-bg: #262a31;
+  --color-meta-fg: #9aa3b0;
+  --color-input-bg: #191c21;
+  --color-input-border: #2b2f37;
+  --color-border-hover: #3a4049;
+  --scrollbar-thumb: #3a4049;
+  --scrollbar-thumb-hover: #4a515c;
+  --add-list-bg: rgba(255, 255, 255, 0.05);
+
+  /* Палитра меток: тёмный тонированный фон + светлый текст того же тона */
+  --chip-purple-bg: #2b2547;  --chip-purple-fg: #a99df2;
+  --chip-blue-bg: #1f2b44;    --chip-blue-fg: #7ea6f0;
+  --chip-red-bg: #3a2129;     --chip-red-fg: #ef7d99;
+  --chip-green-bg: #1d3328;   --chip-green-fg: #5fc491;
+  --chip-amber-bg: #37301e;   --chip-amber-fg: #d9a75c;
+  --chip-teal-bg: #1d3236;    --chip-teal-fg: #6cc3cf;
+  --chip-gray-bg: #262a31;    --chip-gray-fg: #9aa3b0;
+
+  /* Тоны колонок (зарезервировано под меню «цвет списка») */
+  --tint-grey-bg: #1a1d22;    --tint-grey-bd: #262a31;
+  --tint-indigo-bg: #1f1f33;  --tint-indigo-bd: #2a2a44;
+  --tint-green-bg: #1a2b21;   --tint-green-bd: #24382c;
+  --tint-amber-bg: #2d2718;   --tint-amber-bd: #3b3320;
+  --tint-rose-bg: #2e1e26;    --tint-rose-bd: #3d2832;
+  --tint-teal-bg: #182b2e;    --tint-teal-bd: #21393d;
+
+  /* Паттерны */
+  --overlay-modal: rgba(8, 10, 14, 0.6);
+  --segments-bg: #262a31;
+  --drag-placeholder: #3f4550;
+  --drag-ghost-bg: rgba(255, 255, 255, 0.04);
+}

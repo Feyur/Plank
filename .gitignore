@@ -1,0 +1,40 @@
+# Зависимости
+node_modules/
+.pnpm-store/
+
+# Сборка
+dist/
+build/
+*.tsbuildinfo
+
+# Секреты и окружение
+.env
+.env.*
+!.env.example
+!infra/.env.prod.example
+
+# Логи
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.idea/
+*.swp
+
+# Локальные настройки редактора/инструментов
+.claude/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Локальные данные (том Postgres при dev-запуске)
+/data/
+
+# Локальный архив (не для публикации)
+/_archive/
+
+# Прод-секреты
+infra/.env.prod
