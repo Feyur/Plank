@@ -20,10 +20,13 @@ notifications. Web, mobile-responsive, and a native macOS desktop app.
 - Due dates with an optional time, overdue highlighting.
 - Comments with `@mentions`; a mention lands in the recipient's notification bell.
 - Complete a task with a checkmark, or archive it (remove from the board without deleting).
-- Per-board and per-column colors, search, and label filtering.
+- Duplicate a card with its labels and checklist in one click.
+- Per-board and per-column colors, search, label filtering, and a "my cards" filter.
+- Collapsible board folders in the sidebar.
 - Export a board to Excel (`.xlsx`).
 
 **Team modules**
+- **Board chat** — a shared message stream per board for quick questions, with an unread indicator.
 - **Daily** — an async standup: pick a day and a teammate to see their Done / In progress / Planned.
 - **Personal notes** — a private space, like Apple Notes.
 
