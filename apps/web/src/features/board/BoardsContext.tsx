@@ -13,6 +13,7 @@ interface BoardsState {
   create: (title: string) => Promise<void>;
   rename: (id: string, title: string) => void;
   setColor: (id: string, color: string | null) => void;
+  setFolder: (id: string, folder: string | null) => void;
   reorder: (id: string, position: number) => void;
   remove: (id: string) => void;
   reload: () => void;
@@ -62,6 +63,11 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
     api.setBoardColor(id, color).catch(reload);
   }
 
+  function setFolder(id: string, folder: string | null) {
+    setBoards((prev) => prev.map((b) => (b.id === id ? { ...b, folder } : b)));
+    api.setBoardFolder(id, folder).catch(reload);
+  }
+
   function reorder(id: string, position: number) {
     setBoards((prev) =>
       prev.map((b) => (b.id === id ? { ...b, position } : b)).sort((a, b) => a.position - b.position),
@@ -78,7 +84,7 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
 
   return (
     <BoardsContext.Provider
-      value={{ boards, currentId, loading, error, select: setCurrentId, create, rename, setColor, reorder, remove, reload }}
+      value={{ boards, currentId, loading, error, select: setCurrentId, create, rename, setColor, setFolder, reorder, remove, reload }}
     >
       {children}
     </BoardsContext.Provider>

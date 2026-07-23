@@ -39,8 +39,10 @@ import {
   removeComment,
   removeLabel,
   removeList,
+  duplicateCard,
   renameBoard,
   setBoardColor,
+  setBoardFolder,
   renameList,
   setListColor,
   listArchivedCards,
@@ -268,6 +270,31 @@ export async function boardRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) => {
       try {
         const board = await setBoardColor(request.params.id, request.body.color);
+        return reply.send({ board });
+      } catch (err) {
+        return handleBoardError(err, reply);
+      }
+    },
+  );
+
+  app.patch<{ Params: { id: string }; Body: { folder: string | null } }>(
+    '/boards/:id/folder',
+    {
+      preHandler: requireBoardParamAccess,
+      schema: {
+        params: idParams,
+        body: {
+          type: 'object',
+          required: ['folder'],
+          additionalProperties: false,
+          properties: { folder: { type: ['string', 'null'], minLength: 1, maxLength: 60 } },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const folder = request.body.folder?.trim() || null;
+        const board = await setBoardFolder(request.params.id, folder);
         return reply.send({ board });
       } catch (err) {
         return handleBoardError(err, reply);
@@ -626,6 +653,19 @@ export async function boardRoutes(app: FastifyInstance): Promise<void> {
       try {
         const card = await setCardDone(request.params.id, request.body.done);
         return reply.send({ card });
+      } catch (err) {
+        return handleBoardError(err, reply);
+      }
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    '/cards/:id/duplicate',
+    { preHandler: requireCardParamAccess, schema: { params: idParams } },
+    async (request, reply) => {
+      try {
+        const card = await duplicateCard(request.params.id);
+        return reply.code(201).send({ card });
       } catch (err) {
         return handleBoardError(err, reply);
       }

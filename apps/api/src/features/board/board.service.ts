@@ -90,7 +90,18 @@ export interface BoardSummary {
   id: string;
   title: string;
   color: string | null;
+  folder: string | null;
   position: number;
+}
+
+function toBoardSummary(b: {
+  id: string;
+  title: string;
+  color: string | null;
+  folder: string | null;
+  position: number;
+}): BoardSummary {
+  return { id: b.id, title: b.title, color: b.color, folder: b.folder, position: b.position };
 }
 
 function toLabel(row: LabelRow): PublicLabel {
@@ -278,7 +289,7 @@ export async function listBoards(seedOwnerId: string): Promise<BoardSummary[]> {
     await createDefaultBoard(seedOwnerId);
     boards = await boardAccessRepo.boardsForUser(seedOwnerId, config.accessAdminEmails);
   }
-  return boards.map((b) => ({ id: b.id, title: b.title, color: b.color, position: b.position }));
+  return boards.map(toBoardSummary);
 }
 
 export async function getBoard(boardId: string): Promise<PublicBoard> {
@@ -351,6 +362,14 @@ export async function setCardDone(cardId: string, done: boolean): Promise<Public
   return resolveCard(card);
 }
 
+export async function duplicateCard(cardId: string): Promise<PublicCard> {
+  const card = await boardRepo.cardById(cardId);
+  if (!card) throw new BoardError('NOT_FOUND');
+  const max = await boardRepo.maxCardPosition(card.list_id);
+  const copy = await boardRepo.duplicateCard(cardId, (max ?? 0) + POSITION_GAP);
+  return resolveCard(copy);
+}
+
 export interface PublicArchivedCard {
   id: string;
   title: string;
@@ -407,19 +426,28 @@ export async function createBoard(ownerId: string, title: string): Promise<Board
   const board = await boardRepo.createBoard(ownerId, title, (max ?? 0) + POSITION_GAP);
   await createLists(board.id);
   await createStarterLabels(board.id);
-  return { id: board.id, title: board.title, color: board.color, position: board.position };
+  return toBoardSummary(board);
 }
 
 export async function renameBoard(boardId: string, title: string): Promise<BoardSummary> {
   const board = await boardRepo.renameBoard(boardId, title);
   if (!board) throw new BoardError('NOT_FOUND');
-  return { id: board.id, title: board.title, color: board.color, position: board.position };
+  return toBoardSummary(board);
 }
 
 export async function setBoardColor(boardId: string, color: string | null): Promise<BoardSummary> {
   const board = await boardRepo.setBoardColor(boardId, color);
   if (!board) throw new BoardError('NOT_FOUND');
-  return { id: board.id, title: board.title, color: board.color, position: board.position };
+  return toBoardSummary(board);
+}
+
+export async function setBoardFolder(
+  boardId: string,
+  folder: string | null,
+): Promise<BoardSummary> {
+  const board = await boardRepo.setBoardFolder(boardId, folder);
+  if (!board) throw new BoardError('NOT_FOUND');
+  return toBoardSummary(board);
 }
 
 export async function moveBoard(boardId: string, position: number): Promise<void> {

@@ -14,6 +14,8 @@ import { ApiError } from '../../lib/api';
 import { useToast } from '../../lib/toast';
 import * as api from './boardApi';
 import { ArchivePanel } from './ArchivePanel';
+import { useAuth } from '../auth/AuthContext';
+import { ChatPanel } from '../chat/ChatPanel';
 import type { CardPatch } from './boardApi';
 import { boardColorOf, BOARD_COLORS } from './boardColors';
 import { applyCardMove } from './boardMove';
@@ -28,6 +30,7 @@ import type { Board, Card, Label, Member } from './types';
 
 export function BoardScreen() {
   const { currentId, setColor } = useBoards();
+  const { user } = useAuth();
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
@@ -37,6 +40,33 @@ export function BoardScreen() {
   const [members, setMembers] = useState<Member[]>([]);
   const [query, setQuery] = useState('');
   const [filterLabelId, setFilterLabelId] = useState<string | null>(null);
+  const [onlyMine, setOnlyMine] = useState(false);
+  // Чат доски: панель + отметка «прочитано» (в localStorage, на каждую доску своя).
+  const [chatOpen, setChatOpen] = useState(false);
+  const [lastChatAt, setLastChatAt] = useState<string | null>(null);
+  const [chatSeen, setChatSeen] = useState('');
+
+  useEffect(() => {
+    setChatOpen(false);
+    setLastChatAt(null);
+    setOnlyMine(false);
+    setChatSeen(currentId ? (localStorage.getItem(`plank-chat-seen-${currentId}`) ?? '') : '');
+  }, [currentId]);
+
+  function refreshChatMeta(id: string) {
+    api
+      .fetchChat(id, 1)
+      .then((data) => setLastChatAt(data.messages[data.messages.length - 1]?.createdAt ?? null))
+      .catch(() => undefined);
+  }
+
+  function markChatSeen(lastAt: string | null) {
+    if (!currentId) return;
+    const ts = lastAt ?? new Date().toISOString();
+    localStorage.setItem(`plank-chat-seen-${currentId}`, ts);
+    setChatSeen(ts);
+    if (lastAt) setLastChatAt(lastAt);
+  }
 
   const toast = useToast();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -67,6 +97,7 @@ export function BoardScreen() {
       .catch((err) =>
         setError(err instanceof ApiError ? err.message : 'Не удалось загрузить доску'),
       );
+    refreshChatMeta(id);
   }
 
   // Тихое обновление (без «мигания» загрузки) — для realtime.
@@ -84,6 +115,7 @@ export function BoardScreen() {
         });
       })
       .catch(() => undefined);
+    refreshChatMeta(id);
   }
 
   useEffect(() => {
@@ -231,6 +263,27 @@ export function BoardScreen() {
     );
     setOpenCard(null);
     api.deleteCard(id).catch(syncFail);
+  }
+
+  // Копия карточки появляется в конце того же списка; модалку закрываем,
+  // чтобы копия сразу была видна на доске.
+  async function duplicateCard(cardId: string) {
+    try {
+      const { card } = await api.duplicateCard(cardId);
+      setBoard((prev) =>
+        prev
+          ? {
+              ...prev,
+              lists: prev.lists.map((l) =>
+                l.id === card.listId ? { ...l, cards: [...l.cards, card] } : l,
+              ),
+            }
+          : prev,
+      );
+      setOpenCard(null);
+    } catch {
+      syncFail();
+    }
   }
 
   // Убрать карточку в архив: пропадает с доски (как удаление визуально),
@@ -418,6 +471,7 @@ export function BoardScreen() {
   const displayLists = board.lists.map((list) => ({
     ...list,
     cards: list.cards.filter((c) => {
+      if (onlyMine && c.assignee?.id !== user?.id) return false;
       if (filterLabelId && !c.labels.some((l) => l.id === filterLabelId)) return false;
       if (!q) return true;
       return (
@@ -479,6 +533,28 @@ export function BoardScreen() {
           />
         </div>
 
+        <button
+          type="button"
+          onClick={() => setOnlyMine((v) => !v)}
+          title="Только мои карточки"
+          style={{
+            ...toolbarBtn,
+            ...(onlyMine
+              ? {
+                  border: '1px solid var(--color-accent)',
+                  color: 'var(--color-accent)',
+                  background: 'rgba(91,91,214,.08)',
+                }
+              : {}),
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+          Мои
+        </button>
+
         <FilterMenu labels={board.labels} activeId={filterLabelId} onSelect={setFilterLabelId} />
 
         <button type="button" onClick={() => setShowLabels(true)} style={toolbarBtn}>
@@ -531,6 +607,33 @@ export function BoardScreen() {
             <line x1="10" y1="12" x2="14" y2="12" />
           </svg>
           Архив
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setChatOpen((v) => !v)}
+          title="Чат доски"
+          style={{ ...toolbarBtn, position: 'relative' }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="13" rx="3" />
+            <path d="M8 17 L8 21 L13 17" />
+          </svg>
+          Чат
+          {!!lastChatAt && lastChatAt > chatSeen && !chatOpen && (
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: -3,
+                right: -3,
+                width: 9,
+                height: 9,
+                borderRadius: '50%',
+                background: 'var(--color-danger)',
+              }}
+            />
+          )}
         </button>
       </div>
 
@@ -608,6 +711,7 @@ export function BoardScreen() {
           onAddComment={(text) => addComment(openCard.id, text)}
           onDeleteComment={(commentId) => deleteComment(openCard.id, commentId)}
           onToggleDone={(done) => setCardDone(openCard.id, done)}
+          onDuplicate={() => duplicateCard(openCard.id)}
           onArchive={() => archiveCard(openCard.id)}
           onDelete={() => removeCard(openCard.id)}
         />
@@ -623,6 +727,10 @@ export function BoardScreen() {
       )}
 
       {showArchive && <ArchivePanel boardId={board.id} onClose={() => setShowArchive(false)} />}
+
+      {chatOpen && (
+        <ChatPanel boardId={board.id} onClose={() => setChatOpen(false)} onSeen={markChatSeen} />
+      )}
     </div>
   );
 }

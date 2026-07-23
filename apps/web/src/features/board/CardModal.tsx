@@ -33,6 +33,7 @@ interface CardModalProps {
   onAddComment: (text: string) => void;
   onDeleteComment: (commentId: string) => void;
   onToggleDone: (done: boolean) => void;
+  onDuplicate: () => void;
   onArchive: () => void;
   onDelete: () => void;
 }
@@ -62,6 +63,7 @@ export function CardModal({
   onAddComment,
   onDeleteComment,
   onToggleDone,
+  onDuplicate,
   onArchive,
   onDelete,
 }: CardModalProps) {
@@ -579,6 +581,29 @@ export function CardModal({
                 </svg>
               </span>
               {card.done ? 'Выполнено' : 'Отметить выполненной'}
+            </button>
+            <button
+              type="button"
+              onClick={onDuplicate}
+              title="Дублировать карточку"
+              aria-label="Дублировать карточку"
+              style={{
+                width: 38,
+                height: 38,
+                border: '1px solid var(--color-border)',
+                borderRadius: 9,
+                background: 'var(--color-surface)',
+                color: 'var(--color-text-secondary)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="12" height="12" rx="2.5" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
             </button>
             <button
               type="button"

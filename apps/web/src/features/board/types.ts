@@ -60,7 +60,15 @@ export interface BoardSummary {
   id: string;
   title: string;
   color: string | null;
+  folder: string | null;
   position: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  author: Member;
+  text: string;
+  createdAt: string;
 }
 
 export interface ArchivedCard {

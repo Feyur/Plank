@@ -6,6 +6,8 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
+      // Локальный архив старых материалов — не публикуется и не линтится.
+      '_archive/**',
       // Артефакты и Rust-часть десктоп-обёртки — не наш JS/TS.
       'apps/desktop/src-tauri/**',
     ],

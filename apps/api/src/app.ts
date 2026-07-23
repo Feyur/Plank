@@ -9,6 +9,7 @@ import { config, SESSION_COOKIE } from './config';
 import { accessRoutes } from './features/access/access.routes';
 import { authRoutes } from './features/auth/auth.routes';
 import { boardRoutes } from './features/board/board.routes';
+import { chatRoutes } from './features/chat/chat.routes';
 import { dailyRoutes } from './features/daily/daily.routes';
 import { notesRoutes } from './features/notes/notes.routes';
 import { notificationsRoutes } from './features/notifications/notifications.routes';
@@ -45,6 +46,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(authRoutes);
   await app.register(accessRoutes);
   await app.register(boardRoutes);
+  await app.register(chatRoutes);
   await app.register(dailyRoutes);
   await app.register(notesRoutes);
   await app.register(notificationsRoutes);

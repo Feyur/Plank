@@ -16,28 +16,95 @@ const overline = {
 };
 
 export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void }) {
-  const { boards, currentId, select, create, rename, reorder, remove } = useBoards();
+  const { boards, currentId, select, create, rename, setFolder, reorder, remove } = useBoards();
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
+  // Свёрнутые папки помним локально — это личное состояние навигации.
+  const [collapsed, setCollapsed] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('plank-folders-collapsed') ?? '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  function toggleFolder(name: string) {
+    setCollapsed((prev) => {
+      const next = prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name];
+      localStorage.setItem('plank-folders-collapsed', JSON.stringify(next));
+      return next;
+    });
+  }
+
+  // Доски вне папок сверху, затем папки по алфавиту. Внутри — общий порядок position.
+  const rootBoards = boards.filter((b) => !b.folder);
+  const folders = [...new Set(boards.filter((b) => b.folder).map((b) => b.folder as string))].sort(
+    (a, b) => a.localeCompare(b, 'ru'),
+  );
+  const ordered = [
+    ...rootBoards,
+    ...folders.flatMap((f) => boards.filter((b) => b.folder === f)),
+  ];
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const ids = boards.map((b) => b.id);
+    const ids = ordered.map((b) => b.id);
     const oldIndex = ids.indexOf(String(active.id));
     const newIndex = ids.indexOf(String(over.id));
     if (oldIndex < 0 || newIndex < 0) return;
-    const reordered = arrayMove(boards, oldIndex, newIndex);
+    const reordered = arrayMove(ordered, oldIndex, newIndex);
     const idx = reordered.findIndex((b) => b.id === active.id);
     const prev = reordered[idx - 1];
     const next = reordered[idx + 1];
     const position =
       !prev && !next ? 1024 : !prev ? next.position / 2 : !next ? prev.position + 1024 : (prev.position + next.position) / 2;
     reorder(String(active.id), position);
+  }
+
+  function moveToFolder(boardId: string, current: string | null) {
+    setMenuId(null);
+    const name = window.prompt('Папка для доски (пусто — без папки):', current ?? '');
+    if (name === null) return;
+    setFolder(boardId, name.trim() || null);
+  }
+
+  function renderRow(board: BoardSummary, indent: boolean) {
+    return (
+      <BoardRow
+        key={board.id}
+        board={board}
+        indent={indent}
+        active={open && board.id === currentId}
+        editing={editingId === board.id}
+        menuOpen={menuId === board.id}
+        onOpen={() => {
+          select(board.id);
+          onOpen();
+        }}
+        onToggleMenu={() => setMenuId((m) => (m === board.id ? null : board.id))}
+        onStartRename={() => {
+          setMenuId(null);
+          setEditingId(board.id);
+        }}
+        onRename={(title) => {
+          if (title.trim()) rename(board.id, title.trim());
+          setEditingId(null);
+        }}
+        onCancelRename={() => setEditingId(null)}
+        onMoveToFolder={() => moveToFolder(board.id, board.folder)}
+        onDelete={() => {
+          setMenuId(null);
+          if (window.confirm(`Удалить доску «${board.title}»? Все её списки и карточки удалятся.`)) {
+            remove(board.id);
+          }
+        }}
+      />
+    );
   }
 
   function submitCreate() {
@@ -63,36 +130,64 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
       <div style={overline}>Доски</div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={boards.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-          {boards.map((board) => (
-            <BoardRow
-              key={board.id}
-              board={board}
-              active={open && board.id === currentId}
-              editing={editingId === board.id}
-              menuOpen={menuId === board.id}
-              onOpen={() => {
-                select(board.id);
-                onOpen();
-              }}
-              onToggleMenu={() => setMenuId((m) => (m === board.id ? null : board.id))}
-              onStartRename={() => {
-                setMenuId(null);
-                setEditingId(board.id);
-              }}
-              onRename={(title) => {
-                if (title.trim()) rename(board.id, title.trim());
-                setEditingId(null);
-              }}
-              onCancelRename={() => setEditingId(null)}
-              onDelete={() => {
-                setMenuId(null);
-                if (window.confirm(`Удалить доску «${board.title}»? Все её списки и карточки удалятся.`)) {
-                  remove(board.id);
-                }
-              }}
-            />
-          ))}
+        <SortableContext items={ordered.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+          {rootBoards.map((board) => renderRow(board, false))}
+
+          {folders.map((folder) => {
+            const isOpen = !collapsed.includes(folder);
+            const inFolder = boards.filter((b) => b.folder === folder);
+            return (
+              <div key={folder}>
+                <button
+                  type="button"
+                  onClick={() => toggleFolder(folder)}
+                  className="menu-item"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    width: '100%',
+                    height: 30,
+                    padding: '0 8px',
+                    border: 'none',
+                    borderRadius: 8,
+                    color: 'var(--color-text-secondary)',
+                    font: 'var(--text-ui)',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    marginTop: 2,
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    style={{
+                      transform: isOpen ? 'rotate(90deg)' : 'none',
+                      transition: 'transform .15s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <polyline points="9 6 15 12 9 18" />
+                  </svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" style={{ flexShrink: 0 }}>
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                  </svg>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {folder}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted-soft)' }}>
+                    {inFolder.length}
+                  </span>
+                </button>
+                {isOpen && inFolder.map((board) => renderRow(board, true))}
+              </div>
+            );
+          })}
         </SortableContext>
       </DndContext>
 
@@ -146,6 +241,7 @@ export function BoardsNav({ open, onOpen }: { open: boolean; onOpen: () => void 
 
 interface BoardRowProps {
   board: BoardSummary;
+  indent: boolean;
   active: boolean;
   editing: boolean;
   menuOpen: boolean;
@@ -154,11 +250,13 @@ interface BoardRowProps {
   onStartRename: () => void;
   onRename: (title: string) => void;
   onCancelRename: () => void;
+  onMoveToFolder: () => void;
   onDelete: () => void;
 }
 
 function BoardRow({
   board,
+  indent,
   active,
   editing,
   menuOpen,
@@ -167,6 +265,7 @@ function BoardRow({
   onStartRename,
   onRename,
   onCancelRename,
+  onMoveToFolder,
   onDelete,
 }: BoardRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -214,6 +313,7 @@ function BoardRow({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
+        marginLeft: indent ? 16 : 0,
       }}
     >
       <div
@@ -290,6 +390,9 @@ function BoardRow({
           >
             <button type="button" className="menu-item" onClick={onStartRename} style={menuItem('var(--color-text)')}>
               Переименовать
+            </button>
+            <button type="button" className="menu-item" onClick={onMoveToFolder} style={menuItem('var(--color-text)')}>
+              В папку…
             </button>
             <button type="button" className="menu-item" onClick={onDelete} style={menuItem('var(--color-danger)')}>
               Удалить

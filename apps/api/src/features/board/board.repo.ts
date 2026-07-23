@@ -5,6 +5,7 @@ export interface BoardRow {
   owner_id: string;
   title: string;
   color: string | null;
+  folder: string | null;
   position: number;
   created_at: Date;
 }
@@ -137,6 +138,14 @@ export const boardRepo = {
     const { rows } = await pool.query<BoardRow>(
       'update boards set color = $2 where id = $1 returning *',
       [id, color],
+    );
+    return rows[0] ?? null;
+  },
+
+  async setBoardFolder(id: string, folder: string | null): Promise<BoardRow | null> {
+    const { rows } = await pool.query<BoardRow>(
+      'update boards set folder = $2 where id = $1 returning *',
+      [id, folder],
     );
     return rows[0] ?? null;
   },
@@ -315,6 +324,28 @@ export const boardRepo = {
       [cardId, userId],
     );
     return rows[0];
+  },
+
+  // Копия карточки в том же списке: поля + метки + чек-лист (без комментариев).
+  async duplicateCard(cardId: string, position: number): Promise<CardRow> {
+    const { rows } = await pool.query<CardRow>(
+      `insert into cards (list_id, title, description, due_date, due_time, assignee_id, position)
+       select list_id, title, description, due_date, due_time, assignee_id, $2
+         from cards where id = $1
+       returning *`,
+      [cardId, position],
+    );
+    const copy = rows[0];
+    await pool.query(
+      'insert into card_labels (card_id, label_id) select $2, label_id from card_labels where card_id = $1',
+      [cardId, copy.id],
+    );
+    await pool.query(
+      `insert into checklist_items (card_id, text, done, position)
+       select $2, text, done, position from checklist_items where card_id = $1`,
+      [cardId, copy.id],
+    );
+    return copy;
   },
 
   async setCardDone(cardId: string, done: boolean): Promise<CardRow> {

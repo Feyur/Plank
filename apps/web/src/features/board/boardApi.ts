@@ -4,6 +4,7 @@ import type {
   Board,
   BoardSummary,
   Card,
+  ChatMessage,
   ChecklistItem,
   Comment,
   Label,
@@ -55,6 +56,30 @@ export function setBoardColor(
   color: string | null,
 ): Promise<{ board: BoardSummary }> {
   return apiFetch(`/boards/${id}/color`, { method: 'PATCH', body: JSON.stringify({ color }) });
+}
+
+export function setBoardFolder(
+  id: string,
+  folder: string | null,
+): Promise<{ board: BoardSummary }> {
+  return apiFetch(`/boards/${id}/folder`, { method: 'PATCH', body: JSON.stringify({ folder }) });
+}
+
+export function duplicateCard(id: string): Promise<{ card: Card }> {
+  return apiFetch(`/cards/${id}/duplicate`, { method: 'POST' });
+}
+
+export function fetchChat(boardId: string, limit?: number): Promise<{ messages: ChatMessage[] }> {
+  const suffix = limit ? `?limit=${limit}` : '';
+  return apiFetch(`/boards/${boardId}/chat${suffix}`);
+}
+
+export function sendChatMessage(boardId: string, text: string): Promise<{ message: ChatMessage }> {
+  return apiFetch(`/boards/${boardId}/chat`, { method: 'POST', body: JSON.stringify({ text }) });
+}
+
+export function deleteChatMessage(id: string): Promise<{ ok: true }> {
+  return apiFetch(`/chat/${id}`, { method: 'DELETE' });
 }
 
 export function moveBoard(id: string, position: number): Promise<{ ok: true }> {
