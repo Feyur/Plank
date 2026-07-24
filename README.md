@@ -22,7 +22,7 @@ notifications. Web, mobile-responsive, and a native macOS desktop app.
 - Complete a task with a checkmark, or archive it (remove from the board without deleting).
 - Duplicate a card with its labels and checklist in one click.
 - Per-board and per-column colors, search, label filtering, and a "my cards" filter.
-- Collapsible board folders in the sidebar.
+- Colored, collapsible board folders in the sidebar — drag boards in and out.
 - Export a board to Excel (`.xlsx`).
 
 **Team modules**
