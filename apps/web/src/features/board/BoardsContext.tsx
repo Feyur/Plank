@@ -2,10 +2,11 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { ApiError } from '../../lib/api';
 import { useRefresh } from '../realtime/useRefresh';
 import * as api from './boardApi';
-import type { BoardSummary } from './types';
+import type { BoardSummary, Folder } from './types';
 
 interface BoardsState {
   boards: BoardSummary[];
+  folders: Folder[];
   currentId: string | null;
   loading: boolean;
   error: string | null;
@@ -13,18 +14,23 @@ interface BoardsState {
   create: (title: string) => Promise<void>;
   rename: (id: string, title: string) => void;
   setColor: (id: string, color: string | null) => void;
-  setFolder: (id: string, folder: string | null) => void;
+  setFolder: (id: string, folderId: string | null) => void;
   reorder: (id: string, position: number) => void;
   remove: (id: string) => void;
+  createFolder: (name: string) => void;
+  renameFolder: (id: string, name: string) => void;
+  setFolderColor: (id: string, color: string | null) => void;
+  removeFolder: (id: string) => void;
   reload: () => void;
 }
 
 const BoardsContext = createContext<BoardsState | null>(null);
 
-// Список досок и текущая доска живут в оболочке (левое меню), а детали доски
-// грузит уже BoardScreen по currentId.
+// Список досок, папок и текущая доска живут в оболочке (левое меню),
+// а детали доски грузит уже BoardScreen по currentId.
 export function BoardsProvider({ children }: { children: ReactNode }) {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,12 +38,14 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
   function reload() {
     setLoading(true);
     setError(null);
-    api
-      .fetchBoards()
-      .then((data) => {
-        setBoards(data.boards);
+    Promise.all([api.fetchBoards(), api.fetchFolders()])
+      .then(([boardsData, foldersData]) => {
+        setBoards(boardsData.boards);
+        setFolders(foldersData.folders);
         setCurrentId((prev) =>
-          prev && data.boards.some((b) => b.id === prev) ? prev : (data.boards[0]?.id ?? null),
+          prev && boardsData.boards.some((b) => b.id === prev)
+            ? prev
+            : (boardsData.boards[0]?.id ?? null),
         );
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Не удалось загрузить доски'))
@@ -45,7 +53,7 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(reload, []);
-  useRefresh(reload); // обновление списка досок по кнопке в шапке
+  useRefresh(reload); // обновление по кнопке в шапке
 
   async function create(title: string) {
     const { board } = await api.createBoard(title);
@@ -63,9 +71,9 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
     api.setBoardColor(id, color).catch(reload);
   }
 
-  function setFolder(id: string, folder: string | null) {
-    setBoards((prev) => prev.map((b) => (b.id === id ? { ...b, folder } : b)));
-    api.setBoardFolder(id, folder).catch(reload);
+  function setFolder(id: string, folderId: string | null) {
+    setBoards((prev) => prev.map((b) => (b.id === id ? { ...b, folderId } : b)));
+    api.setBoardFolder(id, folderId).catch(reload);
   }
 
   function reorder(id: string, position: number) {
@@ -82,9 +90,48 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
     api.deleteBoard(id).catch(reload);
   }
 
+  async function createFolder(name: string) {
+    const { folder } = await api.createFolder(name);
+    setFolders((prev) => [...prev, folder]);
+  }
+
+  function renameFolder(id: string, name: string) {
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, name } : f)));
+    api.updateFolder(id, { name }).catch(reload);
+  }
+
+  function setFolderColor(id: string, color: string | null) {
+    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, color } : f)));
+    api.updateFolder(id, { color }).catch(reload);
+  }
+
+  function removeFolder(id: string) {
+    setFolders((prev) => prev.filter((f) => f.id !== id));
+    setBoards((prev) => prev.map((b) => (b.folderId === id ? { ...b, folderId: null } : b)));
+    api.deleteFolder(id).catch(reload);
+  }
+
   return (
     <BoardsContext.Provider
-      value={{ boards, currentId, loading, error, select: setCurrentId, create, rename, setColor, setFolder, reorder, remove, reload }}
+      value={{
+        boards,
+        folders,
+        currentId,
+        loading,
+        error,
+        select: setCurrentId,
+        create,
+        rename,
+        setColor,
+        setFolder,
+        reorder,
+        remove,
+        createFolder,
+        renameFolder,
+        setFolderColor,
+        removeFolder,
+        reload,
+      }}
     >
       {children}
     </BoardsContext.Provider>

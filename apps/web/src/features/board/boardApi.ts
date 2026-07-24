@@ -7,6 +7,7 @@ import type {
   ChatMessage,
   ChecklistItem,
   Comment,
+  Folder,
   Label,
   List,
   Member,
@@ -60,9 +61,28 @@ export function setBoardColor(
 
 export function setBoardFolder(
   id: string,
-  folder: string | null,
+  folderId: string | null,
 ): Promise<{ board: BoardSummary }> {
-  return apiFetch(`/boards/${id}/folder`, { method: 'PATCH', body: JSON.stringify({ folder }) });
+  return apiFetch(`/boards/${id}/folder`, { method: 'PATCH', body: JSON.stringify({ folderId }) });
+}
+
+export function fetchFolders(): Promise<{ folders: Folder[] }> {
+  return apiFetch('/folders');
+}
+
+export function createFolder(name: string): Promise<{ folder: Folder }> {
+  return apiFetch('/folders', { method: 'POST', body: JSON.stringify({ name }) });
+}
+
+export function updateFolder(
+  id: string,
+  patch: { name?: string; color?: string | null },
+): Promise<{ folder: Folder }> {
+  return apiFetch(`/folders/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+}
+
+export function deleteFolder(id: string): Promise<{ ok: true }> {
+  return apiFetch(`/folders/${id}`, { method: 'DELETE' });
 }
 
 export function duplicateCard(id: string): Promise<{ card: Card }> {

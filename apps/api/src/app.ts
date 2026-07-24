@@ -11,6 +11,7 @@ import { authRoutes } from './features/auth/auth.routes';
 import { boardRoutes } from './features/board/board.routes';
 import { chatRoutes } from './features/chat/chat.routes';
 import { dailyRoutes } from './features/daily/daily.routes';
+import { foldersRoutes } from './features/folders/folders.routes';
 import { notesRoutes } from './features/notes/notes.routes';
 import { notificationsRoutes } from './features/notifications/notifications.routes';
 import { realtimeRoutes } from './features/realtime/realtime';
@@ -48,6 +49,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(boardRoutes);
   await app.register(chatRoutes);
   await app.register(dailyRoutes);
+  await app.register(foldersRoutes);
   await app.register(notesRoutes);
   await app.register(notificationsRoutes);
   await app.register(realtimeRoutes);

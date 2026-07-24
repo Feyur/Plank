@@ -277,7 +277,7 @@ export async function boardRoutes(app: FastifyInstance): Promise<void> {
     },
   );
 
-  app.patch<{ Params: { id: string }; Body: { folder: string | null } }>(
+  app.patch<{ Params: { id: string }; Body: { folderId: string | null } }>(
     '/boards/:id/folder',
     {
       preHandler: requireBoardParamAccess,
@@ -285,16 +285,15 @@ export async function boardRoutes(app: FastifyInstance): Promise<void> {
         params: idParams,
         body: {
           type: 'object',
-          required: ['folder'],
+          required: ['folderId'],
           additionalProperties: false,
-          properties: { folder: { type: ['string', 'null'], minLength: 1, maxLength: 60 } },
+          properties: { folderId: { type: ['string', 'null'], pattern: uuidField.pattern } },
         },
       },
     },
     async (request, reply) => {
       try {
-        const folder = request.body.folder?.trim() || null;
-        const board = await setBoardFolder(request.params.id, folder);
+        const board = await setBoardFolder(request.params.id, request.body.folderId);
         return reply.send({ board });
       } catch (err) {
         return handleBoardError(err, reply);

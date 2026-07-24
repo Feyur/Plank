@@ -90,7 +90,7 @@ export interface BoardSummary {
   id: string;
   title: string;
   color: string | null;
-  folder: string | null;
+  folderId: string | null;
   position: number;
 }
 
@@ -98,10 +98,10 @@ function toBoardSummary(b: {
   id: string;
   title: string;
   color: string | null;
-  folder: string | null;
+  folder_id: string | null;
   position: number;
 }): BoardSummary {
-  return { id: b.id, title: b.title, color: b.color, folder: b.folder, position: b.position };
+  return { id: b.id, title: b.title, color: b.color, folderId: b.folder_id, position: b.position };
 }
 
 function toLabel(row: LabelRow): PublicLabel {
@@ -443,9 +443,9 @@ export async function setBoardColor(boardId: string, color: string | null): Prom
 
 export async function setBoardFolder(
   boardId: string,
-  folder: string | null,
+  folderId: string | null,
 ): Promise<BoardSummary> {
-  const board = await boardRepo.setBoardFolder(boardId, folder);
+  const board = await boardRepo.setBoardFolder(boardId, folderId);
   if (!board) throw new BoardError('NOT_FOUND');
   return toBoardSummary(board);
 }

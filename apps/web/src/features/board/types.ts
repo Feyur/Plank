@@ -60,7 +60,14 @@ export interface BoardSummary {
   id: string;
   title: string;
   color: string | null;
-  folder: string | null;
+  folderId: string | null;
+  position: number;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  color: string | null;
   position: number;
 }
 

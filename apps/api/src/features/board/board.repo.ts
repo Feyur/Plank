@@ -5,7 +5,7 @@ export interface BoardRow {
   owner_id: string;
   title: string;
   color: string | null;
-  folder: string | null;
+  folder_id: string | null;
   position: number;
   created_at: Date;
 }
@@ -142,10 +142,10 @@ export const boardRepo = {
     return rows[0] ?? null;
   },
 
-  async setBoardFolder(id: string, folder: string | null): Promise<BoardRow | null> {
+  async setBoardFolder(id: string, folderId: string | null): Promise<BoardRow | null> {
     const { rows } = await pool.query<BoardRow>(
-      'update boards set folder = $2 where id = $1 returning *',
-      [id, folder],
+      'update boards set folder_id = $2 where id = $1 returning *',
+      [id, folderId],
     );
     return rows[0] ?? null;
   },
