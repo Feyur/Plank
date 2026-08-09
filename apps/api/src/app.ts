@@ -7,6 +7,7 @@ import websocket from '@fastify/websocket';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { config, SESSION_COOKIE } from './config';
 import { accessRoutes } from './features/access/access.routes';
+import { assignmentsRoutes } from './features/assignments/assignments.routes';
 import { authRoutes } from './features/auth/auth.routes';
 import { boardRoutes } from './features/board/board.routes';
 import { chatRoutes } from './features/chat/chat.routes';
@@ -46,6 +47,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(authRoutes);
   await app.register(accessRoutes);
+  await app.register(assignmentsRoutes);
   await app.register(boardRoutes);
   await app.register(chatRoutes);
   await app.register(dailyRoutes);

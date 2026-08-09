@@ -10,6 +10,9 @@ interface BoardsState {
   currentId: string | null;
   loading: boolean;
   error: string | null;
+  // Карточка, которую нужно открыть после перехода на доску (из «Задач людей»).
+  focusCardId: string | null;
+  setFocusCard: (id: string | null) => void;
   select: (id: string) => void;
   create: (title: string) => Promise<void>;
   rename: (id: string, title: string) => void;
@@ -32,6 +35,7 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [focusCardId, setFocusCard] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,6 +123,8 @@ export function BoardsProvider({ children }: { children: ReactNode }) {
         currentId,
         loading,
         error,
+        focusCardId,
+        setFocusCard,
         select: setCurrentId,
         create,
         rename,

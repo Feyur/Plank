@@ -29,7 +29,7 @@ import { useRealtime } from '../realtime/useRealtime';
 import type { Board, Card, Label, Member } from './types';
 
 export function BoardScreen() {
-  const { currentId, setColor } = useBoards();
+  const { currentId, setColor, focusCardId, setFocusCard } = useBoards();
   const { user } = useAuth();
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +122,16 @@ export function BoardScreen() {
     if (currentId) loadBoard(currentId);
     else setBoard(null);
   }, [currentId]);
+
+  // Открыть карточку, на которую перешли из «Задач людей», когда доска загрузилась.
+  useEffect(() => {
+    if (!focusCardId || !board) return;
+    const card = board.lists.flatMap((l) => l.cards).find((c) => c.id === focusCardId);
+    if (card) {
+      setOpenCard(card);
+      setFocusCard(null);
+    }
+  }, [board, focusCardId, setFocusCard]);
 
   useRealtime(() => {
     if (currentId) refreshBoard(currentId);

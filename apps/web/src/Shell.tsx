@@ -3,10 +3,12 @@
 
 import { useState, type ReactNode } from 'react';
 import { AddUserModal } from './features/access/AddUserModal';
+import { AssignmentsScreen } from './features/assignments/AssignmentsScreen';
 import { useAuth } from './features/auth/AuthContext';
 import { ProfileModal } from './features/auth/ProfileModal';
 import { BoardScreen } from './features/board/BoardScreen';
 import { BoardsNav } from './features/board/BoardsNav';
+import { useBoards } from './features/board/BoardsContext';
 import { DailyScreen } from './features/daily/DailyScreen';
 import { NotesScreen } from './features/notes/NotesScreen';
 import { NotificationBell } from './features/notifications/NotificationBell';
@@ -15,16 +17,25 @@ import { Avatar } from './lib/avatar';
 import { currentTheme, toggleTheme, type Theme } from './lib/theme';
 import { useIsMobile } from './lib/useIsMobile';
 
-type View = 'board' | 'daily' | 'notes';
+type View = 'board' | 'assignments' | 'daily' | 'notes';
 
 export function Shell() {
   const [view, setView] = useState<View>('board');
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { select, setFocusCard } = useBoards();
 
   // На мобиле выбор доски/заметок закрывает выезжающее меню.
   function go(next: View) {
     setView(next);
+    setDrawerOpen(false);
+  }
+
+  // Открыть карточку из «Задач людей»: перейти на её доску и раскрыть модалку.
+  function openCardOnBoard(boardId: string, cardId: string) {
+    select(boardId);
+    setFocusCard(cardId);
+    setView('board');
     setDrawerOpen(false);
   }
 
@@ -45,6 +56,18 @@ export function Shell() {
     >
       <BoardsNav open={view === 'board'} onOpen={() => go('board')} />
       <div style={{ height: 1, background: 'var(--color-border)', margin: '10px 4px' }} />
+      <NavItem
+        active={view === 'assignments'}
+        onClick={() => go('assignments')}
+        label="Задачи людей"
+        icon={
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+            <circle cx="9" cy="8" r="3.2" />
+            <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" />
+            <path d="M16 4.2a3.2 3.2 0 0 1 0 6.1M17.5 14.6c2.3.5 4 2.5 4 5.4" />
+          </svg>
+        }
+      />
       <NavItem
         active={view === 'daily'}
         onClick={() => go('daily')}
@@ -157,6 +180,8 @@ export function Shell() {
         >
           {view === 'board' ? (
             <BoardScreen />
+          ) : view === 'assignments' ? (
+            <AssignmentsScreen onOpenCard={openCardOnBoard} />
           ) : view === 'daily' ? (
             <DailyScreen />
           ) : (
