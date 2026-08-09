@@ -28,6 +28,7 @@ notifications. Web, mobile-responsive, and a native macOS desktop app.
 - Export a board to Excel (`.xlsx`).
 
 **Team modules**
+- **People's tasks** — pick a teammate to see all their cards across every board you can access, grouped by board.
 - **Board chat** — a shared message stream per board for quick questions, with an unread indicator.
 - **Daily** — an async standup: pick a day and a teammate to see their Done / In progress / Planned.
 - **Personal notes** — a private space, like Apple Notes.
