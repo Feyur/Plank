@@ -22,6 +22,7 @@ interface AuthState {
     handle: string,
     avatar: string | null,
   ) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -68,6 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }
 
+  async function changePassword(currentPassword: string, newPassword: string) {
+    await apiFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
   async function logout() {
     // Выходим локально в любом случае — даже если запрос не прошёл.
     try {
@@ -79,7 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, updateProfile, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, updateProfile, changePassword, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,3 +1,5 @@
+> 🖥️ **Локалка/Docker — на домашнем сервере** (Docker с мака удалён намеренно). Как поднять локалку и где базы — см. [LOCALKA.md](LOCALKA.md). Важные данные и бэкапы дублируются на домашний сервер.
+
 # Plank
 
 **A premium team task tracker for small teams.** A Trello-style Kanban board plus

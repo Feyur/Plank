@@ -24,7 +24,7 @@ const inputStyle = {
 } as const;
 
 export function ProfileModal({ onClose }: { onClose: () => void }) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, changePassword } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [role, setRole] = useState(user?.role ?? '');
   const [handle, setHandle] = useState(user?.handle ?? '');
@@ -32,6 +32,30 @@ export function ProfileModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // Смена пароля — отдельное действие со своими полями и статусом.
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwStatus, setPwStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+
+  async function savePassword() {
+    if (currentPassword.length < 1 || newPassword.length < 8) {
+      setPwError('Текущий пароль и новый — минимум 8 символов');
+      return;
+    }
+    setPwStatus('saving');
+    setPwError(null);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setPwStatus('done');
+    } catch (err) {
+      setPwError(err instanceof ApiError ? err.message : 'Не удалось сменить пароль');
+      setPwStatus('idle');
+    }
+  }
 
   const userId = user?.id ?? '';
   const normalizedHandle = handle.trim().replace(/^@+/, '').toLocaleLowerCase();
@@ -239,6 +263,66 @@ export function ProfileModal({ onClose }: { onClose: () => void }) {
               {error}
             </p>
           )}
+
+          <div
+            style={{
+              borderTop: '1px solid var(--color-border)',
+              margin: '4px 0 18px',
+              paddingTop: 18,
+            }}
+          >
+            <span style={fieldLabel}>Смена пароля</span>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Текущий пароль"
+              autoComplete="current-password"
+              style={inputStyle}
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Новый пароль (минимум 8 символов)"
+              autoComplete="new-password"
+              style={{ ...inputStyle, marginBottom: 0 }}
+            />
+            {pwError && (
+              <p style={{ margin: '10px 0 0', fontSize: 12.5, fontWeight: 600, color: 'var(--color-danger)' }}>
+                {pwError}
+              </p>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+              <button
+                type="button"
+                onClick={savePassword}
+                disabled={!currentPassword || newPassword.length < 8 || pwStatus === 'saving'}
+                style={{
+                  height: 38,
+                  padding: '0 16px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 10,
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                  font: 'var(--text-ui)',
+                  fontWeight: 700,
+                  cursor:
+                    currentPassword && newPassword.length >= 8 && pwStatus !== 'saving'
+                      ? 'pointer'
+                      : 'default',
+                  opacity: currentPassword && newPassword.length >= 8 && pwStatus !== 'saving' ? 1 : 0.5,
+                }}
+              >
+                {pwStatus === 'saving' ? 'Меняю…' : 'Сменить пароль'}
+              </button>
+              {pwStatus === 'done' && (
+                <span style={{ fontSize: 12.5, color: 'var(--color-success)', fontWeight: 600 }}>
+                  Пароль обновлён
+                </span>
+              )}
+            </div>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <button

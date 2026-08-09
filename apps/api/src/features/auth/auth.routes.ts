@@ -7,6 +7,7 @@ import { pgUserRepo } from './auth.repo';
 import {
   AuthError,
   authenticateUser,
+  changePassword,
   registerUser,
   toPublicUser,
   updateProfile,
@@ -174,6 +175,41 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         }
         if (err instanceof InvalidAvatarError) {
           return reply.code(400).send({ error: 'Недопустимый аватар' });
+        }
+        throw err;
+      }
+    },
+  );
+
+  app.post<{ Body: { currentPassword: string; newPassword: string } }>(
+    '/auth/change-password',
+    {
+      preHandler: requireAuth,
+      config: loginRateLimit,
+      schema: {
+        body: {
+          type: 'object',
+          required: ['currentPassword', 'newPassword'],
+          additionalProperties: false,
+          properties: {
+            currentPassword: { type: 'string', minLength: 1, maxLength: 200 },
+            newPassword: { type: 'string', minLength: 8, maxLength: 200 },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        await changePassword(
+          pgUserRepo,
+          request.user.sub,
+          request.body.currentPassword,
+          request.body.newPassword,
+        );
+        return reply.send({ ok: true });
+      } catch (err) {
+        if (err instanceof AuthError && err.code === 'WRONG_PASSWORD') {
+          return reply.code(400).send({ error: 'Текущий пароль неверный' });
         }
         throw err;
       }

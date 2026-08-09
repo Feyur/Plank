@@ -15,7 +15,11 @@ export interface PublicUser {
   canManageAccess: boolean;
 }
 
-export type AuthErrorCode = 'EMAIL_TAKEN' | 'HANDLE_TAKEN' | 'INVALID_CREDENTIALS';
+export type AuthErrorCode =
+  | 'EMAIL_TAKEN'
+  | 'HANDLE_TAKEN'
+  | 'INVALID_CREDENTIALS'
+  | 'WRONG_PASSWORD';
 
 export class AuthError extends Error {
   constructor(public code: AuthErrorCode) {
@@ -78,6 +82,21 @@ export async function updateProfile(
     throw err;
   }
   return toPublicUser(user);
+}
+
+export async function changePassword(
+  repo: UserRepo,
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const user = await repo.findById(userId);
+  if (!user) throw new AuthError('INVALID_CREDENTIALS');
+
+  const ok = await verify(user.password_hash, currentPassword).catch(() => false);
+  if (!ok) throw new AuthError('WRONG_PASSWORD');
+
+  await repo.updatePassword(userId, await hash(newPassword));
 }
 
 export async function findAvailableHandle(repo: UserRepo, desiredHandle: string): Promise<string> {

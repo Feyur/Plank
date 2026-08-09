@@ -33,6 +33,7 @@ export interface UserRepo {
     handle: string,
     avatar: string | null,
   ): Promise<UserRow>;
+  updatePassword(id: string, passwordHash: string): Promise<void>;
 }
 
 export const pgUserRepo: UserRepo = {
@@ -74,5 +75,9 @@ export const pgUserRepo: UserRepo = {
       [id, name, role, handle, avatar],
     );
     return rows[0];
+  },
+
+  async updatePassword(id, passwordHash) {
+    await pool.query('update users set password_hash = $2 where id = $1', [id, passwordHash]);
   },
 };

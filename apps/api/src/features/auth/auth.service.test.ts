@@ -37,6 +37,10 @@ function makeRepo(): UserRepo {
       row.avatar = avatar;
       return row;
     },
+    async updatePassword(id, passwordHash) {
+      const row = users.find((u) => u.id === id)!;
+      row.password_hash = passwordHash;
+    },
   };
 }
 
